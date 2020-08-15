@@ -1,28 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import Post from './Post';
+import { db } from './firebase';
 
 function App() {
-  const [posts, setPosts] = useState([
-    {
-      username: 'cleverqazi',
-      caption: 'Wow day three',
-      imageUrl:
-        'https://lp-cms-production.imgix.net/2019-06/28206231.jpg?fit=crop&q=40&sharp=10&vib=20&auto=format&ixlib=react-8.6.4'
-    },
-    {
-      username: 'frank',
-      caption: 'Yes cool',
-      imageUrl:
-        'https://ik.imagekit.io/grgdihc3l/Miami/media/Locations/Beaches/South%20Beach/Aerials/South_Beach_Ocean_Drive_neon_lights_1440x900.jpg?ext=.jpg'
-    },
-    {
-      username: 'tammy',
-      caption: 'Wanna go there',
-      imageUrl:
-        'https://thumbnails.expedia.com/dDGkAaZt4dG5b9vtlSvDprtzLZ4=/536x384/smart/filters:quality(60)/thumbnails.expedia.com/6Nto6MM9nH0zuX8xigOquEwLxYQ=/cs-content-hub.s3-website-us-west-2.amazonaws.com/fullimages/20d7c445a0779b45bff3bae27cb2a90b.jpeg'
-    }
-  ]);
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    db.collection('posts').onSnapshot(snapshot => {
+      setPosts(
+        snapshot.docs.map(doc => ({
+          id: doc.id,
+          post: doc.data()
+        }))
+      );
+    });
+  }, []);
 
   return (
     <div className="app">
@@ -36,31 +29,14 @@ function App() {
 
       <h1>HELLO CLEVER PROGRAMMER Let's Build an Instagram Clone</h1>
 
-      {posts.map(post => (
+      {posts.map(({ id, post }) => (
         <Post
+          key={id}
           username={post.username}
           caption={post.caption}
           imageUrl={post.imageUrl}
         />
       ))}
-
-      <Post
-        username="cleverqazi"
-        caption="Wow day three"
-        imageUrl="https://lp-cms-production.imgix.net/2019-06/28206231.jpg?fit=crop&q=40&sharp=10&vib=20&auto=format&ixlib=react-8.6.4"
-      />
-
-      <Post
-        username="frank"
-        caption="Yes cool"
-        imageUrl="https://ik.imagekit.io/grgdihc3l/Miami/media/Locations/Beaches/South%20Beach/Aerials/South_Beach_Ocean_Drive_neon_lights_1440x900.jpg?ext=.jpg"
-      />
-
-      <Post
-        username="tammy"
-        caption="Wanna go there"
-        imageUrl="https://thumbnails.expedia.com/dDGkAaZt4dG5b9vtlSvDprtzLZ4=/536x384/smart/filters:quality(60)/thumbnails.expedia.com/6Nto6MM9nH0zuX8xigOquEwLxYQ=/cs-content-hub.s3-website-us-west-2.amazonaws.com/fullimages/20d7c445a0779b45bff3bae27cb2a90b.jpeg"
-      />
     </div>
   );
 }
