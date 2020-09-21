@@ -6,6 +6,8 @@ import { makeStyles } from '@material-ui/core/styles';
 import Modal from '@material-ui/core/Modal';
 import { Button, Input } from '@material-ui/core';
 import ImageUpload from './ImageUpload';
+import axios from './axios';
+import Pusher from 'pusher-js';
 //import InstagramEmbed from 'react-instagram-embed';
 
 function getModalStyle() {
@@ -58,16 +60,24 @@ function App() {
   }, [user, username]);
 
   useEffect(() => {
-    db.collection('posts')
-      .orderBy('timestamp', 'desc')
-      .onSnapshot(snapshot => {
-        setPosts(
-          snapshot.docs.map(doc => ({
-            id: doc.id,
-            post: doc.data()
-          }))
-        );
-      });
+    const pusher = new Pusher('85c333119fb3899a9f33', {
+      cluster: 'eu'
+    });
+
+    const channel = pusher.subscribe('posts');
+    channel.bind('inserted', function(data) {
+      console.log(`Data received ${data}`);
+      fetchPosts();
+    });
+  }, []);
+
+  const fetchPosts = async () =>
+    await axios.get('/sync').then(response => {
+      setPosts(response.data);
+    });
+
+  useEffect(() => {
+    fetchPosts();
   }, []);
 
   const signUp = event => {
@@ -173,14 +183,14 @@ function App() {
 
       <div className="app__posts">
         <div className="app_postsLeft">
-          {posts.map(({ id, post }) => (
+          {posts.map(post => (
             <Post
-              key={id}
-              postId={id}
+              key={post._id}
+              postId={post._id}
               user={user}
-              username={post.username}
+              username={post.user}
               caption={post.caption}
-              imageUrl={post.imageUrl}
+              imageUrl={post.image}
             />
           ))}
         </div>
